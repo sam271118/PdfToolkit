@@ -1,0 +1,11 @@
+﻿<Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+        @* <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" /> *@
+        <RouteView RouteData="@routeData" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p>Xin lỗi, không có gì ở địa chỉ này.</p>
+        </LayoutView>
+    </NotFound>
+</Router>

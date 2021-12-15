@@ -1,0 +1,322 @@
+@page "/pdfmerger"
+@using static Components.ThemeChanger
+@using static Components.Merger.PdfMerger
+@using static Components.Merger.PdfMergerCore
+@inject IJSRuntime JSRuntime
+
+
+<!-- Wrapper -->
+<div id="wrapper">
+
+    <!-- Header -->
+    <header id="header">
+
+        <h1>PDF Merger</h1>
+
+        @if (! string.IsNullOrEmpty(ThemeIcon))
+        {
+            <a id="themeSwitch" @onclick="ToggleFullTheme" class="@ThemeIcon" style="margin-top: 1.3em;" title="Change Theme"></a>
+        }
+
+    </header>
+
+
+    <!-- Main -->
+    <div style="text-align: center;">
+
+        <section id="intro" class="@SpecialSectionTheme">
+
+            @if (! @IsSubmitComplete)
+            {
+                <div>
+
+                     <h2>Tải lên các tệp PDF của bạn.</h2>
+                     <h4>Giới hạn - 20 tệp/20MB mỗi tệp</h4>
+
+                    <br>
+
+                    <p class="dropzone">
+                        <InputFile OnChange="OnInputFileChange" multiple accept="application/pdf" title=""></InputFile>
+                        Kéo và thả tệp hoặc nhấp để tải lên.
+                    </p>
+
+                    <p>
+                        <h2>@UploadMessage</h2>
+                    </p>
+
+                    @if (TotalFiles > MaxFilesAllowed || TotalSize > MaxSizeAllowed || FileType != FileTypeAllowed)
+                    {
+                        <p>
+                            <h2>@UploadErrorMessage</h2>
+                            <h1>😢</h1>
+                        </p>
+                    }
+
+                    @if (uploadedFiles.Count > 0 && IsUploadComplete)
+                    {
+                        <div>
+
+                            @foreach (IBrowserFile file in uploadedFiles)
+                            {
+                                <p style="margin: 0.5em;">
+
+                                    @file.Name
+                                    <a class="icon solid fas fa-times-circle" title="Xóa File" @onclick="@(e => RemoveFile(file))" style="padding-left: 1em;"></a>
+
+                                    @if (uploadedFiles.IndexOf(file) > 0)
+                                    {
+                                        <a class="icon solid fas fa-arrow-circle-up" title="Di Chuyển File Lên Trên" @onclick="@(e => MoveFileUp(file))" style="padding-left: 1em;"></a>
+                                    }
+
+                                    @if (uploadedFiles.IndexOf(file) < (uploadedFiles.Count - 1))
+                                    {
+                                        <a class="icon solid fas fa-arrow-circle-down" title="Di Chuyển File Xuống Dưới" @onclick="@(e => MoveFileDown(file))" style="padding-left: 1em;"></a>
+                                    }
+                                    
+                                </p>
+                            }
+
+                        </div>
+                    }
+
+                    @if (@IsUploadComplete)
+                    {
+                        <p style="padding-top: 0.75em;">
+                            <h2>@SubmitMessage</h2>
+                        </p>
+
+                        <p>
+                            <button class="button primary large icon solid fas fa-check-circle" @onclick="Submit">Thực Hiện</button>
+                        </p>
+                    }
+
+                </div>
+            }
+
+            @if (@IsMergeComplete)
+            {
+                <div>
+
+                    <h2>Hợp nhất thành công tệp PDF @TotalFiles.  ✅</h2>
+                    <h1>🎉 🎊</h1>
+                    
+                    <br>
+
+                    <p>
+                        <button class="button primary large icon solid fas fa-file-download" @onclick="DownloadFile">Tải Xuống</button>
+                    </p>
+
+                    <p>
+                        <a style="cursor: pointer;" class="icon solid fas fa-redo alt" title="Làm Lại" @onclick="Refresh"></a>
+                    </p>
+
+                    <p>
+                        <h2>@DownloadMessage</h2>
+                    </p>
+
+                </div>
+            }
+
+        </section>
+
+    </div>
+
+@* 
+    <!-- Footer -->
+    <footer id="footer">
+        <section style="text-align: center;">
+            <img src="../images/square_crop_less.jpg" alt="" style="max-width: 93px; border-radius: 50%;" />
+            <h3 style="font-weight: bold;">Subham Karmakar</h3>
+            <p>Coding / Programming || Cloud || Software || Computers || Football</p>
+            <a href="https://www.subhamk.com" class="button">About Me</a>
+            <a href="https://blogs.subhamk.com" class="button">My Blogs</a>
+            <a href="https://cheatsheets.subhamk.com" class="button">My CheatSheets</a>
+        </section>
+        <section>
+            <h2 style="text-align: center;">Follow</h2>
+            <ul class="icons" style="text-align: center;">
+                <li><a href="https://www.twitter.com/SubhamK108" class="icon brands fab fa-twitter alt"></a></li>
+                <!-- <li><a href="#" class="icon brands fa-facebook-f alt"></a></li> -->
+                <!-- <li><a href="#" class="icon brands fa-instagram alt"></a></li> -->
+                <!-- <li><a href="#" class="icon brands fa-linkedin-in alt"></a></li> -->
+                <li><a href="https://www.github.com/SubhamK108" class="icon brands fab fa-github alt" title="GitHub"></a></li>
+                <li><a href="https://www.hackerrank.com/SubhamK108" class="icon brands fab fa-hackerrank alt" title="HackerRank"></a></li>
+                <li><a href="https://www.leetcode.com/SubhamK108" class="icon solid fas fa-code alt" title="LeetCode"></a></li>
+            </ul>
+        </section>
+    </footer> *@
+
+
+            <section style="text-align: center;">
+            <a href="/" class="button">Quay Lại Trang Chủ</a>
+        </section>
+
+
+</div>
+
+
+
+@code {
+    private List<IBrowserFile> uploadedFiles = new List<IBrowserFile>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsFirstLoad)
+        {
+            IsFirstLoad = false;
+            await GetThemeIcon();
+        }
+    }
+    
+    private async Task GetThemeIcon()
+    {
+        ThemeIcon = await JSRuntime.InvokeAsync<string>("getCurrentTheme");
+    }
+
+    private void ToggleFullTheme()
+    {
+        JSRuntime.InvokeVoidAsync("toggleBodyTheme", ThemeIcon);
+        ToggleTheme();
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs args)
+    {
+        uploadedFiles.Clear();
+        RefreshApp();
+
+        UploadMessage = "Tải lên các tệp của bạn ...  ⏳";
+        TotalFiles = args.FileCount;
+
+        if (TotalFiles > MaxFilesAllowed)
+        {
+            uploadedFiles.Clear();
+            IsUploadComplete = false;
+            UploadMessage = "Tải lên thất bại!  ❌";
+            UploadErrorMessage = $"Cho phép tối đa {MaxFilesAllowed} tệp!";
+        }
+
+        foreach (var pdfFile in args.GetMultipleFiles(MaxFilesAllowed))
+        {
+            TotalSize = pdfFile.Size;
+            FileType = pdfFile.ContentType;
+
+            if (TotalSize > MaxSizeAllowed)
+            {
+                uploadedFiles.Clear();
+                IsUploadComplete = false;
+                UploadMessage = "Tải lên thất bại!  ❌";
+                UploadErrorMessage = "Kích thước tối đa 20MB cho mỗi tệp!";
+                StateHasChanged();
+            }
+
+            if (FileType != FileTypeAllowed)
+            {
+                uploadedFiles.Clear();
+                IsUploadComplete = false;
+                UploadMessage = "Tải lên thất bại!  ❌";
+                UploadErrorMessage = "Bạn chỉ có thể tải lên các tệp PDF!";
+                StateHasChanged();
+            }
+
+            if (FileType == FileTypeAllowed)
+            {
+                byte[] buffer = new byte[pdfFile.Size];
+                await pdfFile.OpenReadStream(MaxSizeAllowed).ReadAsync(buffer);
+                Pdfs.Add(buffer);
+                uploadedFiles.Add(pdfFile);
+            }
+        }
+
+        if (string.IsNullOrEmpty(UploadErrorMessage))
+        {
+            if (TotalFiles == 1)
+            {
+                uploadedFiles.Clear();
+                IsUploadComplete = false;
+                UploadMessage = $"Chỉ tải lên tệp PDF của {TotalFiles}, như vậy là chưa đủ! Bạn phải tải lên ít nhất 2 tệp.  😕";
+            }
+            else
+            {
+                IsUploadComplete = true;
+                UploadMessage = $"Đã tải lên {TotalFiles} tệp PDF.  ✅";
+            }
+        }
+    }
+
+    private async void Submit()
+    {
+        SubmitMessage = $"Đang hợp nhất các tệp PDF của {TotalFiles}, hãy kiên nhẫn ...  ⏳";
+        await Task.Delay(100);
+        MergePdf();
+        StateHasChanged();
+    }
+
+    private async Task SaveAs(string filename, string file)
+    {
+        await JSRuntime.InvokeVoidAsync("saveAsFile", filename, file);
+    }
+
+    private async void DownloadFile()
+    {
+        string filename = "Merged_PDF";
+        DownloadMessage = "Bắt đầu tải xuống ...  ⏳";
+        await Task.Delay(100);
+        await SaveAs(filename, FinalMergedPdfURL);
+        DownloadMessage = "Đã bắt đầu tải xuống  ✅";
+        StateHasChanged();
+    }
+
+    private void RemoveFile(IBrowserFile file)
+    {
+        int index = uploadedFiles.IndexOf(file);
+        uploadedFiles.RemoveAt(index);
+        TotalFiles = uploadedFiles.Count;
+
+        if (TotalFiles == 1)
+        {
+            uploadedFiles.Clear();
+            UploadMessage = $"Không còn đủ tệp PDF! Cần ít nhất 2 tệp.  😕";
+            IsUploadComplete = false;
+        }
+        else
+        {
+            UploadMessage = $"{TotalFiles} tệp PDF còn lại.  ✅";
+        }
+
+        Pdfs.RemoveAt(index);
+    }
+
+    private void MoveFileUp(IBrowserFile file)
+    {
+        IBrowserFile movingFile = file;
+        int index = uploadedFiles.IndexOf(file);
+        uploadedFiles.RemoveAt(index);
+        uploadedFiles.Insert(index - 1, movingFile);
+        movingFile = null;
+
+        byte[] movingBuffer = Pdfs[index];
+        Pdfs.RemoveAt(index);
+        Pdfs.Insert(index - 1, movingBuffer);
+        movingBuffer = null;
+    }
+
+    private void MoveFileDown(IBrowserFile file)
+    {
+        IBrowserFile movingFile = file;
+        int index = uploadedFiles.IndexOf(file);
+        uploadedFiles.RemoveAt(index);
+        uploadedFiles.Insert(index + 1, movingFile);
+        movingFile = null;
+
+        byte[] movingBuffer = Pdfs[index];
+        Pdfs.RemoveAt(index);
+        Pdfs.Insert(index + 1, movingBuffer);
+        movingBuffer = null;
+    }
+
+    private void Refresh()
+    {
+        uploadedFiles.Clear();
+        RefreshApp();
+    }
+}

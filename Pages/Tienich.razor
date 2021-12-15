@@ -1,0 +1,115 @@
+﻿@page "/Tienich"
+@using static Components.ThemeChanger
+@inject IJSRuntime JSRuntime;
+
+
+<!-- Wrapper -->
+<div id="wrapper">
+
+    <!-- Header -->
+    <header id="header">
+
+        <h1>PHẦN MỀM TIỆN ÍCH - MR DUY</h1>
+
+        @if (! string.IsNullOrEmpty(ThemeIcon))
+        {
+            <a id="themeSwitch" @onclick="ToggleFullTheme" class="@ThemeIcon" style="margin-top: 1.3em;" title="Thay Đổi Chủ Đề"></a>
+        }
+
+    </header>
+
+
+    <!-- Main -->
+    <div>
+
+        <section id="intro" class="@SpecialSectionTheme">
+
+            <h1>CÔNG CỤ CÓ SẴN</h1>
+
+        </section>
+        <section style="text-align: center;">
+            <h3 style="font-weight: bold;">CÁC CHỨC NĂNG CỦA TOOL BAO GỒM</h3>
+            
+            <img src="../images/CHUNG.png" />
+            <p>Giao Diện Chính Của Phần Mềm</p>
+                        
+            <img src="../images/TIENICHCHUNG.png" />
+            <p>Các Chức Năng Tiện Ích</p>
+                        
+            <img src="../images/CAPTURE.png" />
+            <p>Chụp Ảnh Màn Hình</p>
+                    
+            <img src="../images/COMPRESSORPDF.png" />
+            <p>Nén Nhỏ File PDF</p>
+                        
+
+
+
+
+
+        </section>
+    </div>
+
+
+    <!-- Options -->
+    <div>
+
+        <section id="intro" class="@SpecialSectionTheme">
+
+            <a href="https://drive.google.com/file/d/1_XRxvoPKITsks9ElRe0SQW_524dEBqTl/view?usp=sharing" class="button primary large">Bấm Để Tải Về</a>
+            <a href="/" class="button primary large">Quay Lại Trang Chủ</a>
+        </section>
+
+    </div>
+
+
+
+    <!-- Footer -->
+    <footer id="footer">
+        <section style="text-align: center;">
+            <img src="../images/sam_baduy.png" alt="" style="max-width: 93px; border-radius: 50%;" />
+            <h3 style="font-weight: bold;">MR DUY - FAMILY</h3>
+            <p>Technical Team || CNG || NG || SNG || LNG || LPG</p>
+            <a href="https://www.facebook.com/duycng" class="button">Thông Tin Của Tôi</a>
+            <a href="https://www.facebook.com/messages/t/100002632693068" class="button">Gửi Tin Nhắn Nhanh</a>
+            <a href="https://t.me/duykhang2020" class="button">Telegram</a>
+        </section>
+        <section>
+            <h2 style="text-align: center;">Theo Dõi</h2>
+            <ul class="icons" style="text-align: center;">
+                <!--<li><a href="#" class="icon brands fab fa-twitter alt"></a></li>-->
+                <li><a href="https://www.facebook.com/duycng" class="icon brands fa-facebook-f alt" title="Facebook"></a></li>
+                <li><a href="https://www.instagram.com/duynguyen286/" class="icon brands fa-instagram alt"title="Instagram"></a></li>
+                <li><a href="https://www.facebook.com/messages/t/100002632693068" class="icon brands fa-facebook-messenger alt" title="Messenger"></a></li>
+                <li><a href="mailto:duycng1991@gmail.com" class="icon solid fas fa-envelope alt" title="Gmail"></a></li>
+               <!-- <li><a href="#" class="icon brands fab fa-hackerrank alt" title="HackerRank"></a></li>-->
+               <!-- <li><a href="#" class="icon solid fas fa-code alt" title="LeetCode"></a></li>-->
+            </ul>
+        </section>
+    </footer>
+
+</div>
+
+
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsFirstLoad)
+        {
+            IsFirstLoad = false;
+            await GetThemeIcon();
+        }
+    }
+    
+    private async Task GetThemeIcon()
+    {
+        ThemeIcon = await JSRuntime.InvokeAsync<string>("getCurrentTheme");
+    }
+
+    private void ToggleFullTheme()
+    {
+        JSRuntime.InvokeVoidAsync("toggleBodyTheme", ThemeIcon);
+        ToggleTheme();
+    }
+}
